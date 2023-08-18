@@ -1,7 +1,22 @@
 import React, { useState } from 'react';
 import './App.css';
 import { withAuthenticator, Button } from '@aws-amplify/ui-react';
-import { Auth } from 'aws-amplify'; // Import Auth from aws-amplify
+import { Auth } from 'aws-amplify';
+import AWS from 'aws-sdk';
+
+// Function to convert a file to base64 format
+const convertFileToBase64 = async (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      resolve(event.target.result.split(',')[1]);
+    };
+    reader.onerror = (error) => {
+      reject(error);
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
 function App() {
   const [file, setFile] = useState(null);
@@ -17,10 +32,26 @@ function App() {
         return;
       }
 
-      // Use AWS SDK or Amplify Storage to upload the file to S3 here
-      // You can use the Amplify Storage.put() method for this purpose
+      const base64File = await convertFileToBase64(file);
 
-      alert('File uploaded successfully.');
+      const lambda = new AWS.Lambda({
+        region: 'eu-north-1', // Replace with your AWS region
+      });
+
+      const params = {
+        FunctionName: 'Dropbox_lambda', // Replace with your Lambda function name
+        InvocationType: 'RequestResponse',
+        Payload: JSON.stringify({ file: base64File, filename: file.name }),
+      };
+
+      lambda.invoke(params, (error, data) => {
+        if (error) {
+          console.error('Error invoking Lambda function:', error);
+          alert('An error occurred while uploading the file.');
+        } else {
+          alert('File uploaded successfully.');
+        }
+      });
     } catch (error) {
       console.error('Error uploading file:', error);
       alert('An error occurred while uploading the file.');
@@ -45,10 +76,9 @@ function App() {
         </div>
         <p></p>
         <div className="SignOut">
-        <Button onClick={handleSignOut}>Sign Out</Button>
-      </div>
+          <Button onClick={handleSignOut}>Sign Out</Button>
+        </div>
       </header>
-      
     </div>
   );
 }
