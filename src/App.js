@@ -4,7 +4,6 @@ import { withAuthenticator, Button } from '@aws-amplify/ui-react';
 import { Auth } from 'aws-amplify';
 import AWS from 'aws-sdk';
 
-// Function to convert a file to base64 format
 const convertFileToBase64 = async (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -35,11 +34,11 @@ function App() {
       const base64File = await convertFileToBase64(file);
 
       const lambda = new AWS.Lambda({
-        region: 'eu-north-1', // Replace with your AWS region
+        region: 'eu-north-1',
       });
 
       const params = {
-        FunctionName: 'Dropbox_lambda', // Replace with your Lambda function name
+        FunctionName: 'Dropbox_lambda',
         InvocationType: 'RequestResponse',
         Payload: JSON.stringify({ file: base64File, filename: file.name }),
       };
